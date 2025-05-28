@@ -1,0 +1,30 @@
+.sidebar {
+  width: 220px;
+  background: #f9f9f9;
+  height: 100vh;
+  padding: 20px;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+  border-radius: 0 20px 20px 0;
+}
+
+.sidebar-btn {
+  display: block;
+  padding: 12px 15px;
+  margin: 10px 0;
+  text-decoration: none;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-style: italic;
+  color: #333;
+  transition: 0.3s ease;
+}
+
+.sidebar-btn:hover {
+  background-color: #e0f7fa;
+  color: #000;
+}
+
+.logout-btn {
+  color: red;
+}
