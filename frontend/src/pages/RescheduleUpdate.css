@@ -1,0 +1,42 @@
+.reschedule-container {
+  padding: 20px;
+}
+
+.reschedule-container h2 {
+  margin-bottom: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 0 10px #ccc;
+}
+
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+
+input, select {
+  padding: 6px;
+  width: 100%;
+}
+
+.edit-btn, .save-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+.save-btn {
+  background-color: #2196f3;
+  color: white;
+}

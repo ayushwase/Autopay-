@@ -5,6 +5,11 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import SchedulePayment from './pages/SchedulePayment';
+import PaymentList  from './pages/PaymentList';
+import RescheduleUpdate from './pages/RescheduleUpdate';
+import BulkUpload from './pages/BulkUpload';
+import Reports from './pages/Reports';
+
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -21,6 +26,11 @@ function App() {
             <Route path="/login" element={<Login onLogin={() => setIsLoggedIn(true)} />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/schedule-payment" element={<SchedulePayment />} />
+            <Route path="/payment-list" element={<PaymentList />} />
+            <Route path="/reschedule-update" element={<RescheduleUpdate />} />
+            <Route path="/bulk-upload" element={<BulkUpload />} />
+            <Route path="/reports" element={<Reports />} />
+            
             {/* Add more routes as needed */}
           </Routes>
         </div>

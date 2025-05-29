@@ -1,0 +1,40 @@
+import React from 'react';
+/*import './Sidebar.css';*/
+import { Link } from 'react-router-dom';
+
+function Sidebar({ onLogout }) {
+  return (
+    <div className="sidebar">
+      <h2>Menu</h2>
+      <ul>
+        <li><Link to="/dashboard">Dashboard</Link></li>
+        <li><Link to="/schedule-payment">Schedule Payment</Link></li>
+        <li><Link to="/payment-list">Payment List</Link></li>
+        <li><Link to="/reschedule-update">Reschedule/Update</Link></li>
+        <li><Link to="/bulk-upload">Bulk Upload</Link></li>
+        <li><Link to="/reports">Reports</Link></li>
+        <li><Link to="/settings">Settings</Link></li>
+      </ul>
+
+      {/* ✅ Use a real button, NOT a Link */}
+      <button
+        className="logout-button"
+        onClick={onLogout}
+        style={{
+          marginTop: '20px',
+          padding: '10px 20px',
+          border: 'none',
+          borderRadius: '20px',
+          backgroundColor: '#e0f7fa',
+          color: '#333',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+        }}
+      >
+        Logout
+      </button>
+    </div>
+  );
+}
+
+export default Sidebar;
