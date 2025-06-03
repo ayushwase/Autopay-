@@ -1,73 +1,43 @@
-// src/pages/SchedulePayment.js
 import React, { useState } from 'react';
-import './SchedulePayment.css';
+import api from '../api'; // <- Import our API
 
-const SchedulePayment = () => {
-  const [form, setForm] = useState({
+function SchedulePayment() {
+  const [formData, setFormData] = useState({
+    payer: '',
     payee: '',
     amount: '',
-    date: '',
-    frequency: 'one-time', // one-time or recurring
+    due_date: '',
+    method: ''
   });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Payment Scheduled:', form);
-    alert('Payment scheduled successfully!');
-    setForm({
-      payee: '',
-      amount: '',
-      date: '',
-      frequency: 'one-time',
-    });
+    try {
+      const res = await api.post('/schedule-payment', formData);
+      alert(res.data.message);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to schedule payment');
+    }
   };
 
   return (
-    <div className="schedule-container">
-      <h2>Schedule a Payment</h2>
-      <form onSubmit={handleSubmit}>
-        <label>Payee Name</label>
-        <input
-          type="text"
-          name="payee"
-          value={form.payee}
-          onChange={handleChange}
-          required
-        />
-
-        <label>Amount (₹)</label>
-        <input
-          type="number"
-          name="amount"
-          value={form.amount}
-          onChange={handleChange}
-          required
-        />
-
-        <label>Payment Date</label>
-        <input
-          type="date"
-          name="date"
-          value={form.date}
-          onChange={handleChange}
-          required
-        />
-
-        <label>Frequency</label>
-        <select name="frequency" value={form.frequency} onChange={handleChange}>
-          <option value="one-time">One-time</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-        </select>
-
-        <button type="submit">Schedule Payment</button>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit}>
+      <input name="payer" placeholder="Payer" onChange={handleChange} />
+      <input name="payee" placeholder="Payee" onChange={handleChange} />
+      <input name="amount" placeholder="Amount" onChange={handleChange} />
+      <input name="due_date" placeholder="YYYY-MM-DD" onChange={handleChange} />
+      <input name="method" placeholder="Method" onChange={handleChange} />
+      <button type="submit">Schedule</button>
+    </form>
   );
-};
+}
 
 export default SchedulePayment;
