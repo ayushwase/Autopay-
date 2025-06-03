@@ -1,45 +1,34 @@
-import React, { useState } from 'react';
-import './PaymentList.css';
+import React, { useEffect, useState } from 'react';
+import api from '../api';
 
-const initialPayments = [
-  {
-    id: 1,
-    recipient: 'John Doe',
-    amount: 500,
-    date: '2025-06-01',
-    status: 'Scheduled',
-  },
-  {
-    id: 2,
-    recipient: 'Jane Smith',
-    amount: 1000,
-    date: '2025-05-20',
-    status: 'Completed',
-  },
-  {
-    id: 3,
-    recipient: 'ABC Corp',
-    amount: 750,
-    date: '2025-05-10',
-    status: 'Failed',
-  },
-];
+function PaymentList() {
+  const [payments, setPayments] = useState([]);
 
-const PaymentList = () => {
-  const [payments, setPayments] = useState(initialPayments);
+  useEffect(() => {
+    api.get('/payments')
+      .then(res => setPayments(res.data))
+      .catch(err => console.error('Error fetching payments:', err));
+  }, []);
 
-  const cancelPayment = (id) => {
-    const updated = payments.map((payment) =>
-      payment.id === id ? { ...payment, status: 'Cancelled' } : payment
-    );
-    setPayments(updated);
+  const handleCancel = (id) => {
+    // Call API to cancel payment (only if it's scheduled)
+    api.post(`/payments/${id}/cancel`)
+      .then(() => {
+        // Refresh list after cancel
+        setPayments(prev =>
+          prev.map(p =>
+            p.id === id ? { ...p, status: 'Cancelled' } : p
+          )
+        );
+      })
+      .catch(err => console.error('Error cancelling payment:', err));
   };
 
   return (
-    <div className="payment-list-container">
+    <div className="container mt-4">
       <h2>Payment List</h2>
-      <table>
-        <thead>
+      <table className="table table-bordered mt-3">
+        <thead className="table-light">
           <tr>
             <th>ID</th>
             <th>Recipient</th>
@@ -50,22 +39,27 @@ const PaymentList = () => {
           </tr>
         </thead>
         <tbody>
-          {payments.map((payment) => (
+          {payments.map(payment => (
             <tr key={payment.id}>
               <td>{payment.id}</td>
-              <td>{payment.recipient}</td>
-              <td>${payment.amount}</td>
-              <td>{payment.date}</td>
+              <td>{payment.payee}</td>
+              <td>₹{payment.amount}</td>
+              <td>{payment.due_date}</td>
               <td>{payment.status}</td>
               <td>
                 <button
-                  onClick={() => cancelPayment(payment.id)}
+                  className="btn btn-danger btn-sm me-2"
+                  onClick={() => handleCancel(payment.id)}
                   disabled={payment.status !== 'Scheduled'}
-                  className="cancel-btn"
                 >
                   Cancel
                 </button>
-                <button className="edit-btn">Edit</button>
+                <button
+                  className="btn btn-success btn-sm"
+                  onClick={() => window.location.href = `/edit-payment/${payment.id}`}
+                >
+                  Edit
+                </button>
               </td>
             </tr>
           ))}
@@ -73,6 +67,6 @@ const PaymentList = () => {
       </table>
     </div>
   );
-};
+}
 
 export default PaymentList;
