@@ -1,34 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import api from '../api';
+import React, { useState } from 'react';
+import './PaymentList.css';
 
-function PaymentList() {
-  const [payments, setPayments] = useState([]);
+const initialPayments = [
+  { id: 1, recipient: 'gaurav', amount: '₹123654', date: '2025-07-03', status: 'Pending' },
+  { id: 2, recipient: 'gaurav', amount: '₹123654', date: '2025-07-03', status: 'Pending' },
+  { id: 3, recipient: 'gaurav', amount: '₹123654', date: '2025-07-07', status: 'Pending' },
+  { id: 4, recipient: 'gaurav', amount: '₹123654', date: '2025-07-07', status: 'Pending' },
+  { id: 5, recipient: 'gaurav', amount: '₹123654', date: '2025-07-07', status: 'Pending' },
+];
 
-  useEffect(() => {
-    api.get('/payments')
-      .then(res => setPayments(res.data))
-      .catch(err => console.error('Error fetching payments:', err));
-  }, []);
+export default function PaymentList() {
+  const [payments, setPayments] = useState(initialPayments);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [currentEdit, setCurrentEdit] = useState(null);
 
-  const handleCancel = (id) => {
-    // Call API to cancel payment (only if it's scheduled)
-    api.post(`/payments/${id}/cancel`)
-      .then(() => {
-        // Refresh list after cancel
-        setPayments(prev =>
-          prev.map(p =>
-            p.id === id ? { ...p, status: 'Cancelled' } : p
-          )
-        );
-      })
-      .catch(err => console.error('Error cancelling payment:', err));
+  const handleEditClick = (payment) => {
+    setCurrentEdit(payment);
+    setEditModalOpen(true);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentEdit((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleUpdate = () => {
+    const updated = payments.map((pay) =>
+      pay.id === currentEdit.id ? currentEdit : pay
+    );
+    setPayments(updated);
+    setEditModalOpen(false);
   };
 
   return (
-    <div className="container mt-4">
+    <div className="payment-container">
       <h2>Payment List</h2>
-      <table className="table table-bordered mt-3">
-        <thead className="table-light">
+      <table>
+        <thead>
           <tr>
             <th>ID</th>
             <th>Recipient</th>
@@ -39,24 +47,17 @@ function PaymentList() {
           </tr>
         </thead>
         <tbody>
-          {payments.map(payment => (
+          {payments.map((payment) => (
             <tr key={payment.id}>
               <td>{payment.id}</td>
-              <td>{payment.payee}</td>
-              <td>₹{payment.amount}</td>
-              <td>{payment.due_date}</td>
+              <td>{payment.recipient}</td>
+              <td>{payment.amount}</td>
+              <td>{payment.date}</td>
               <td>{payment.status}</td>
               <td>
                 <button
-                  className="btn btn-danger btn-sm me-2"
-                  onClick={() => handleCancel(payment.id)}
-                  disabled={payment.status !== 'Scheduled'}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-success btn-sm"
-                  onClick={() => window.location.href = `/edit-payment/${payment.id}`}
+                  className="edit-btn"
+                  onClick={() => handleEditClick(payment)}
                 >
                   Edit
                 </button>
@@ -65,8 +66,46 @@ function PaymentList() {
           ))}
         </tbody>
       </table>
+
+      {/* Edit Modal */}
+      {editModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Edit Payment</h3>
+            <label>
+              Recipient:
+              <input
+                type="text"
+                name="recipient"
+                value={currentEdit.recipient}
+                onChange={handleChange}
+              />
+            </label>
+            <label>
+              Amount:
+              <input
+                type="text"
+                name="amount"
+                value={currentEdit.amount}
+                onChange={handleChange}
+              />
+            </label>
+            <label>
+              Date:
+              <input
+                type="date"
+                name="date"
+                value={currentEdit.date}
+                onChange={handleChange}
+              />
+            </label>
+            <div className="modal-buttons">
+              <button onClick={handleUpdate}>Update</button>
+              <button className="cancel" onClick={() => setEditModalOpen(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-export default PaymentList;

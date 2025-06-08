@@ -1,5 +1,5 @@
 DB_USER = 'postgres'
-DB_PASS = 'admin123'
+DB_PASS = 'root'
 DB_NAME = 'autopay_db'
 DB_HOST = 'localhost'
 
