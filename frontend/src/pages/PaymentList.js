@@ -1,28 +1,47 @@
+// File: frontend/src/pages/PaymentList.js
+// Ismein payment list fetch karne aur cancel karne ka logic update kiya gaya hai.
+
 import React, { useEffect, useState } from 'react';
 import api from '../api';
+
+const USER_ID = 1; // Demo user ID
 
 function PaymentList() {
   const [payments, setPayments] = useState([]);
 
-  useEffect(() => {
-    api.get('/payments')
+  const fetchPayments = () => {
+    api.get(`/payments/${USER_ID}`)
       .then(res => setPayments(res.data))
       .catch(err => console.error('Error fetching payments:', err));
+  };
+
+  useEffect(() => {
+    fetchPayments();
   }, []);
 
   const handleCancel = (id) => {
-    // Call API to cancel payment (only if it's scheduled)
-    api.post(`/payments/${id}/cancel`)
-      .then(() => {
-        // Refresh list after cancel
-        setPayments(prev =>
-          prev.map(p =>
-            p.id === id ? { ...p, status: 'Cancelled' } : p
-          )
-        );
-      })
-      .catch(err => console.error('Error cancelling payment:', err));
+    if (window.confirm("Are you sure you want to cancel this payment?")) {
+      api.post(`/payment/${id}/cancel`)
+        .then(() => {
+          alert('Payment cancelled!');
+          // List ko refresh karein
+          fetchPayments();
+        })
+        .catch(err => {
+          console.error('Error cancelling payment:', err);
+          alert(err.response?.data?.error || 'Failed to cancel payment');
+        });
+    }
   };
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'Paid': return 'text-success';
+      case 'Failed': return 'text-danger';
+      case 'Cancelled': return 'text-muted';
+      default: return 'text-warning';
+    }
+  }
 
   return (
     <div className="container mt-4">
@@ -33,7 +52,7 @@ function PaymentList() {
             <th>ID</th>
             <th>Recipient</th>
             <th>Amount</th>
-            <th>Date</th>
+            <th>Due Date</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -43,22 +62,16 @@ function PaymentList() {
             <tr key={payment.id}>
               <td>{payment.id}</td>
               <td>{payment.payee}</td>
-              <td>₹{payment.amount}</td>
+              <td>₹{payment.amount.toFixed(2)}</td>
               <td>{payment.due_date}</td>
-              <td>{payment.status}</td>
+              <td className={`fw-bold ${getStatusClass(payment.status)}`}>{payment.status}</td>
               <td>
                 <button
-                  className="btn btn-danger btn-sm me-2"
+                  className="btn btn-danger btn-sm"
                   onClick={() => handleCancel(payment.id)}
-                  disabled={payment.status !== 'Scheduled'}
+                  disabled={payment.status !== 'Pending'} // Disabled logic updated
                 >
                   Cancel
-                </button>
-                <button
-                  className="btn btn-success btn-sm"
-                  onClick={() => window.location.href = `/edit-payment/${payment.id}`}
-                >
-                  Edit
                 </button>
               </td>
             </tr>
