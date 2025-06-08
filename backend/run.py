@@ -1,11 +1,12 @@
+# File: run.py
 from app import create_app
-from app.models import db
 
 app = create_app()
 
-# Create DB tables on app start
-with app.app_context():
-    db.create_all()
+# IMPORTANT: db.create_all() has been removed.
+# Database schema will now be managed solely by Flask-Migrate.
+# Make sure you run 'flask db init', 'flask db migrate', 'flask db upgrade'
+# whenever your models.py changes or to set up the database initially.
 
 if __name__ == '__main__':
     app.run(debug=True)
