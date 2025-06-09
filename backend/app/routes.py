@@ -1,129 +1,133 @@
-# File: backend/app/routes.py
-from flask import Blueprint, request, jsonify
-from .models import db, Payment, User # Ensure User model is imported
-from datetime import datetime, date
+from flask import Blueprint, request, jsonify, current_app
+from app import db
+from app.models import User, Payment
+from sqlalchemy.orm import joinedload
+from datetime import datetime
 
 api = Blueprint('api', __name__)
 
-# --- Helper Function to Get or Create a Demo User ---
-# Yeh function database mein ek demo user banata hai agar koi user exist nahi karta.
-# Real world app mein, yahan user authentication se user_id aayegi.
-def get_or_create_demo_user():
-    user = User.query.first() # Pehla user find karein
-    if not user:
-        # Agar koi user nahi hai, toh naya demo user banayein
-        user = User(name="Prasad", bank_name="Global Bank", balance=250000.0)
-        db.session.add(user)
-        db.session.commit()
-    return user
-
-# --- Basic API Check ---
-@api.route('/', methods=['GET'])
-def index():
-    return jsonify({"message": "API is running"}), 200
-
-# --- User and Account Endpoints ---
+# ----------------------------------------------------
+# User API Routes
+# ----------------------------------------------------
 @api.route('/user/<int:user_id>', methods=['GET'])
-def get_user_info(user_id):
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-        
-    # Check for failed payments for this user
-    failed_payments = Payment.query.filter_by(user_id=user.id, status='Failed').count()
+def get_user_data(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if user:
+        failed_payments_count = Payment.query.filter_by(user_id=user.id, status='FAILED').count()
+        user_data = {
+            'id': user.id,
+            'name': user.name,
+            'bankName': user.bank_name,
+            'balance': user.balance,
+            'failed_payments_count': failed_payments_count
+        }
+        return jsonify(user_data), 200
+    return jsonify({'message': 'User not found'}), 404
 
-    return jsonify({
-        'id': user.id,
-        'name': user.name,
-        'bankName': user.bank_name,
-        'balance': user.balance,
-        'failed_payments_count': failed_payments
-    })
+# ----------------------------------------------------
+# Payments API Routes
+# ----------------------------------------------------
+@api.route('/payments/<int:user_id>', methods=['GET'])
+def get_user_payments(user_id):
+    payments = Payment.query.filter_by(user_id=user_id).order_by(Payment.due_date.desc()).all()
+    payments_data = []
+    for payment in payments:
+        payments_data.append({
+            'id': payment.id,
+            'payee': payment.payee,  # <--- इथे 'payee' असे अपडेट केले आहे
+            'amount': float(payment.amount),
+            'due_date': payment.due_date.strftime('%Y-%m-%d'), # <--- इथे 'due_date' असे अपडेट केले आहे
+            'method': payment.method, # <--- नवीन: 'method' फील्ड ऍड केले आहे
+            'status': payment.status,
+            'created_at': payment.created_at.strftime('%Y-%m-%d %H:%M:%S') # <--- नवीन: 'created_at' फील्ड ऍड केले आहे
+        })
+    return jsonify(payments_data), 200
 
-# --- Payment Endpoints ---
 @api.route('/schedule-payment', methods=['POST'])
 def schedule_payment():
+    data = request.get_json()
+    if not data:
+        return jsonify({'message': 'No input data provided'}), 400
+
+    print(f"Received data for schedule-payment: {data}")
+    print(f"Value of 'due_date' field: {data.get('due_date')}")
+
+
+    user = User.query.filter_by(id=1).first()
+    if not user:
+        return jsonify({'message': 'User ID 1 not found'}), 404
+
     try:
-        data = request.json
-        # Demo user ko get karein (ya authenticated user ko in a real app)
-        demo_user = get_or_create_demo_user()
+        due_date_str = data.get('due_date')
+        if not due_date_str:
+            return jsonify({'message': 'Payment date (due_date) is required'}), 400
 
-        payment = Payment(
-            user_id=demo_user.id, # Payment ko user se link karein
+        try:
+            parsed_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+        except ValueError as ve:
+            return jsonify({'message': f'Invalid date format for "{due_date_str}". Expected YYYY-MM-DD.', 'error': str(ve)}), 400
+
+        payment_method = data.get('method', 'Other')
+
+        new_payment = Payment(
+            user_id=user.id,
             payee=data['payee'],
-            amount=float(data['amount']), # Ensure amount is converted to float
-            due_date=datetime.strptime(data['due_date'], '%Y-%m-%d'), # Ensure date format is correct
-            method=data['method'],
-            status='Pending' # Default status
+            amount=data['amount'],
+            due_date=parsed_date,
+            status='SCHEDULED',
+            method=payment_method
         )
-        db.session.add(payment)
+        db.session.add(new_payment)
         db.session.commit()
-        return jsonify({'message': 'Payment scheduled successfully'}), 201
+        return jsonify({'message': 'Payment scheduled successfully', 'payment_id': new_payment.id}), 201
+    except KeyError as ke:
+        db.session.rollback()
+        print(f"Missing data key during scheduling: {ke}")
+        return jsonify({'message': f"Missing data: {str(ke)}. Make sure 'payee', 'amount', and 'due_date' are provided."}), 400
     except Exception as e:
-        db.session.rollback() # Agar error ho toh database changes rollback karein
-        return jsonify({'error': str(e)}), 400 # Return specific error message
+        db.session.rollback()
+        print(f"An unexpected error occurred during scheduling: {e}")
+        return jsonify({'message': 'An unexpected error occurred during scheduling', 'error': str(e)}), 500
 
-@api.route('/payments/<int:user_id>', methods=['GET'])
-def get_payments(user_id):
-    # Fetch payments for a specific user
-    payments = Payment.query.filter_by(user_id=user_id).order_by(Payment.due_date.desc()).all()
-    return jsonify([
-        {
-            'id': p.id,
-            'user_id': p.user_id,
-            'payee': p.payee,
-            'amount': p.amount,
-            'due_date': p.due_date.strftime('%Y-%m-%d'),
-            'status': p.status,
-            'method': p.method,
-            'created_at': p.created_at.strftime('%Y-%m-%d %H:%M')
-        }
-        for p in payments
-    ])
-    
-@api.route('/payment/<int:payment_id>/cancel', methods=['POST'])
-def cancel_payment(payment_id):
-    payment = Payment.query.get(payment_id)
-    if not payment:
-        return jsonify({'error': 'Payment not found'}), 404
-    
-    if payment.status != 'Pending':
-        return jsonify({'error': 'Only pending payments can be cancelled'}), 400
+# ----------------------------------------------------
+# Automatic Payment Processing (Scheduler & Manual Trigger)
+# ----------------------------------------------------
 
-    payment.status = 'Cancelled'
-    db.session.commit()
-    return jsonify({'message': 'Payment cancelled successfully'})
-
-# --- CORE LOGIC: Automatic Payment Processing ---
 @api.route('/process-due-payments', methods=['POST'])
-def process_due_payments():
-    """
-    Yeh function saare due payments ko process karega.
-    Ek real app mein, yeh function ek scheduler (cron job) se daily run hona chahiye.
-    """
-    today = date.today()
-    # Sirf 'Pending' status wale payments ko process karein jinki due date aaj ya usse pehle ki hai
-    due_payments = Payment.query.filter(Payment.status == 'Pending', db.func.date(Payment.due_date) <= today).all()
-    
-    processed_count = 0
-    failed_count = 0
+def process_due_payments_route():
+    return process_due_payments(current_app)
 
-    for payment in due_payments:
-        user = payment.user # Payment se linked user ko access karein
-        if user.balance >= payment.amount:
-            # Payment successful
-            user.balance -= payment.amount
-            payment.status = 'Paid'
-            processed_count += 1
-        else:
-            # Payment failed due to insufficient balance
-            payment.status = 'Failed'
-            failed_count += 1
-    
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Payment processing complete.',
-        'processed': processed_count,
-        'failed': failed_count
-    })
+def process_due_payments(app):
+    print(f"[{datetime.now()}] Attempting to process due payments...")
+
+    with app.app_context():
+        today = datetime.now().date()
+
+        payments_to_process = Payment.query.options(joinedload(Payment.user)).filter(
+            Payment.status == 'SCHEDULED',
+            Payment.due_date <= today
+        ).all()
+
+        processed_count = 0
+        failed_count = 0
+
+        for payment in payments_to_process:
+            user = payment.user
+            if user and user.balance >= payment.amount:
+                user.balance -= payment.amount
+                payment.status = 'PAID'
+                processed_count += 1
+                print(f"Processed payment ID {payment.id} for user {user.name}. New balance: {user.balance}")
+            else:
+                payment.status = 'FAILED'
+                failed_count += 1
+                print(f"Failed to process payment ID {payment.id} for user {user.name}. Insufficient balance or user not found.")
+
+        try:
+            db.session.commit()
+            print(f"[{datetime.now()}] Payment processing complete. Processed: {processed_count}, Failed: {failed_count}")
+            return jsonify({'message': 'Payments processed successfully', 'processed': processed_count, 'failed': failed_count}), 200
+        except Exception as e:
+            db.session.rollback()
+            print(f"[{datetime.now()}] Error committing payments: {e}")
+            return jsonify({'message': 'Error processing payments', 'error': str(e)}), 500

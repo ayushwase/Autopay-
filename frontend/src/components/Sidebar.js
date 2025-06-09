@@ -1,18 +1,61 @@
+// frontend/src/components/Sidebar.js
 import React from 'react';
-import { Link } from 'react-router-dom';
-import './Sidebar.css'; // optional styling
+import { NavLink } from 'react-router-dom'; // <--- Link ऐवजी NavLink इम्पोर्ट करा
+import './Sidebar.css';
 
 const Sidebar = () => {
   return (
     <div className="sidebar">
-      <Link to="/dashboard" className="sidebar-btn">Dashboard</Link>
-      <Link to="/schedule-payment" className="sidebar-btn">Schedule Payment</Link>
-      <Link to="/payment-list" className="sidebar-btn">Payment List</Link>
-      <Link to="/reschedule-update" className="sidebar-btn">Reschedule/Update</Link>
-      <Link to="/bulk-upload" className="sidebar-btn">Bulk Upload</Link>
-      <Link to="/reports" className="sidebar-btn">Reports</Link>
-      <Link to="/settings" className="sidebar-btn">Settings</Link>
-      <Link to="/logout" className="sidebar-btn logout-btn">Logout</Link>
+      {/* प्रत्येक NavLink साठी className ऍड करा */}
+      <NavLink
+        to="/dashboard"
+        className={({ isActive }) => (isActive ? "sidebar-btn active-sidebar-btn" : "sidebar-btn")}
+      >
+        Dashboard
+      </NavLink>
+      <NavLink
+        to="/schedule-payment"
+        className={({ isActive }) => (isActive ? "sidebar-btn active-sidebar-btn" : "sidebar-btn")}
+      >
+        Schedule Payment
+      </NavLink>
+      <NavLink
+        to="/payment-list"
+        className={({ isActive }) => (isActive ? "sidebar-btn active-sidebar-btn" : "sidebar-btn")}
+      >
+        Payment List
+      </NavLink>
+      <NavLink
+        to="/reschedule-update"
+        className={({ isActive }) => (isActive ? "sidebar-btn active-sidebar-btn" : "sidebar-btn")}
+      >
+        Reschedule/Update
+      </NavLink>
+      <NavLink
+        to="/bulk-upload"
+        className={({ isActive }) => (isActive ? "sidebar-btn active-sidebar-btn" : "sidebar-btn")}
+      >
+        Bulk Upload
+      </NavLink>
+      <NavLink
+        to="/reports"
+        className={({ isActive }) => (isActive ? "sidebar-btn active-sidebar-btn" : "sidebar-btn")}
+      >
+        Reports
+      </NavLink>
+      <NavLink
+        to="/settings"
+        className={({ isActive }) => (isActive ? "sidebar-btn active-sidebar-btn" : "sidebar-btn")}
+      >
+        Settings
+      </NavLink>
+      {/* Logout साठी active-sidebar-btn ची गरज नाही, कारण ते पेज नाही */}
+      <NavLink
+        to="/logout"
+        className="sidebar-btn logout-btn"
+      >
+        Logout
+      </NavLink>
     </div>
   );
 };
