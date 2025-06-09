@@ -1,51 +1,77 @@
+/* src/pages/SchedulePayment.css */
+
 .schedule-container {
-  max-width: 500px;
-  margin: 60px auto;
-  padding: 30px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', sans-serif;
+  max-width: 550px;
+  margin: 50px auto;
+  padding: 35px;
+  background: #fdfdfd;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .schedule-container h2 {
+  font-size: 28px;
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 30px;
   color: #2c3e50;
 }
 
+.schedule-container form {
+  display: flex;
+  flex-direction: column;
+}
+
 .schedule-container label {
-  display: block;
-  margin: 10px 0 6px;
+  font-weight: 600;
   color: #34495e;
-  font-weight: 500;
+  
 }
 
 .schedule-container input,
 .schedule-container select {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px;
   font-size: 16px;
-  margin-bottom: 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+  background-color: #fefefe;
+  margin-bottom: 9px;
+  margin-top: 5px;
+}
+
+.schedule-container input:focus,
+.schedule-container select:focus {
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+  outline: none;
 }
 
 .schedule-container button {
-  width: 100%;
-  padding: 12px;
-  background-color: #27ae60;
-  color: #fff;
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 12px;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
 }
 
 .schedule-container button:hover {
-  background-color: #219150;
+  background-color: #43a047;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .schedule-container {
+    margin: 20px;
+    padding: 25px;
+  }
+
+  .schedule-container h2 {
+    font-size: 22px;
+  }
 }

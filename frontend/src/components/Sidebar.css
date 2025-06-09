@@ -1,3 +1,4 @@
+/* Sidebar.css */
 .sidebar {
   width: 240px;
   background: #ffffff;
@@ -20,7 +21,7 @@
   font-size: 16px;
   font-weight: 500;
   color: #333333;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease, color 0.3s ease;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
@@ -29,6 +30,22 @@
   background-color: #e3f2fd;
   transform: translateX(4px);
   color: #1a237e;
+}
+
+/* सक्रिय (active) बटणासाठी स्टाईल */
+.sidebar-btn.active {
+  background-color: #72d0ff; /* डार्क ब्लू बॅकग्राउंड */
+  color: #ffffff;           /* पांढरा मजकूर */
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(26, 35, 126, 0.2); /* गडद सावली */
+  transform: translateX(0); /* hover इफेक्ट निष्क्रिय करा */
+  border-left: 5px solid #3baaff;
+}
+
+/* जेव्हा सक्रिय बटणावर हॉवर कराल तेव्हा वेगळी स्टाईल हवी असल्यास */
+.sidebar-btn.active:hover {
+  background-color: #72d0ff; /* थोडा गडद ब्लू */
+  color: #ffffff;
 }
 
 .logout-btn {

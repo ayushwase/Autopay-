@@ -9,7 +9,7 @@ import PaymentList  from './pages/PaymentList';
 import RescheduleUpdate from './pages/RescheduleUpdate';
 import BulkUpload from './pages/BulkUpload';
 import Reports from './pages/Reports';
-
+import Setting from './pages/Settings'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -30,6 +30,7 @@ function App() {
             <Route path="/reschedule-update" element={<RescheduleUpdate />} />
             <Route path="/bulk-upload" element={<BulkUpload />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/settings" element={<Setting />} />
             
             {/* Add more routes as needed */}
           </Routes>
