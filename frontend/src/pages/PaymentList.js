@@ -50,10 +50,12 @@ function PaymentList() {
         <thead className="table-light">
           <tr>
             <th>ID</th>
-            <th>Recipient</th>
+            <th>Payee</th>
             <th>Amount</th>
             <th>Due Date</th>
             <th>Status</th>
+            <th>Method</th>
+            <th>Created at</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -65,6 +67,8 @@ function PaymentList() {
               <td>₹{payment.amount.toFixed(2)}</td>
               <td>{payment.due_date}</td>
               <td className={`fw-bold ${getStatusClass(payment.status)}`}>{payment.status}</td>
+              <td>{payment.method}</td>
+              <td>{payment.created_at}</td>
               <td>
                 <button
                   className="btn btn-danger btn-sm"
