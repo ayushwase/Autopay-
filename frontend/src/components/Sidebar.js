@@ -6,7 +6,6 @@ import './Sidebar.css'; // optional styling
 const Sidebar = () => {
   return (
     <div className="sidebar">
-      {/* प्रत्येक Link ला NavLink मध्ये बदला आणि end prop ऍड करा */}
       <NavLink to="/dashboard" className="sidebar-btn" activeClassName="active" end>Dashboard</NavLink>
       <NavLink to="/schedule-payment" className="sidebar-btn" activeClassName="active" end>Schedule Payment</NavLink>
       <NavLink to="/payment-list" className="sidebar-btn" activeClassName="active" end>Payment List</NavLink>
