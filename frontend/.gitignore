@@ -21,3 +21,23 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Python virtual environment
+venv/
+.venv/
+env/
+
+# Python bytecode files
+*.pyc
+__pycache__/
+
+# SQLite database files (जर तुम्ही SQLite वापरत असाल तर)
+*.db
+*.sqlite3
+
+# Operating System specific files
+.DS_Store # macOS
+Thumbs.db # Windows
+
+# Environment variables file (जर तुमच्याकडे असेल)
+.env

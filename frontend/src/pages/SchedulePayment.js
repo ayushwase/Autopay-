@@ -1,94 +1,108 @@
-// src/pages/SchedulePayment.js
+// File: frontend/src/pages/SchedulePayment.js
 import React, { useState } from 'react';
-import api from '../api'; // <--- API इम्पोर्ट करा
-import './SchedulePayment.css';
+import api from '../api'; // Import our API
 
-const SchedulePayment = () => {
-  const [formData, setFormData] = useState({ // form ऐवजी formData वापरू
+function SchedulePayment() {
+  const [formData, setFormData] = useState({
+    // 'payer' field hata diya gaya hai, kyunki backend ab user_id se link karega
     payee: '',
     amount: '',
-    due_date: '', // 'date' ऐवजी 'due_date' वापरा, backend ला अपेक्षित आहे
-    method: '',   // 'frequency' ऐवजी 'method' वापरा, backend ला अपेक्षित आहे
-                  // frequency फील्ड काढून टाका किंवा method मध्ये रूपांतरित करा
+    due_date: '',
+    method: ''
   });
 
   const handleChange = (e) => {
-    setFormData(prev => ({ // setForm ऐवजी setFormData
+    setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.value
     }));
   };
 
-  const handleSubmit = async (e) => { // async फंक्शन करा
-    e.preventDefault();
-    try {
-      // console.log('Payment Scheduled:', formData); // ही लाइन debugging साठी ठेवा
-      const res = await api.post('/schedule-payment', formData); // Backend ला डेटा पाठवा
-      alert(res.data.message); // Backend कडून आलेला मेसेज दाखवा
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Default form submission ko rokein
 
-      // फॉर्म रिसेट करा
+    try {
+      // Data ko backend par bhejte samay console mein log karein debugging ke liye
+      console.log("Sending data to backend:", formData);
+
+      const res = await api.post('/schedule-payment', formData);
+      alert(res.data.message); // Success message dikhayein
+
+      // Successful submission ke baad form ko clear karein
       setFormData({
         payee: '',
         amount: '',
         due_date: '',
-        method: '',
+        method: ''
       });
     } catch (err) {
       console.error("Error scheduling payment:", err.response ? err.response.data : err);
+      // Backend se specific error message display karein agar available ho
       alert(`Failed to schedule payment: ${err.response?.data?.error || err.message || 'Unknown error'}`);
     }
   };
 
   return (
-    <div className="schedule-container">
-      <h2>Schedule a Payment</h2>
-      <form onSubmit={handleSubmit}>
-        <label>Payee Name</label>
-        <input
-          type="text"
-          name="payee"
-          value={formData.payee} // form.payee ऐवजी formData.payee
-          onChange={handleChange}
-          required
-        />
-
-        <label>Amount (₹)</label>
-        <input
-          type="number"
-          name="amount"
-          value={formData.amount} // form.amount ऐवजी formData.amount
-          onChange={handleChange}
-          required
-        />
-
-        <label>Payment Date</label>
-        <input
-          type="date"
-          name="due_date" // name="date" ऐवजी name="due_date"
-          value={formData.due_date} // form.date ऐवजी formData.due_date
-          onChange={handleChange}
-          required
-        />
-
-        <label>Payment Method</label> {/* "Frequency" ऐवजी "Payment Method" */}
-        <input
-          type="text" // select ऐवजी text input, कारण backend ला string 'method' अपेक्षित आहे
-          name="method"
-          value={formData.method}
-          onChange={handleChange}
-          required
-          placeholder="e.g., Bank Transfer, Credit Card"
-        />
-        {/* <select name="frequency" value={form.frequency} onChange={handleChange}>
-          <option value="one-time">One-time</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-        </select> */} 
-
-        <button type="submit">Schedule Payment</button>
+    <div className="container mt-4">
+      <h2>Schedule New Payment</h2>
+      <form onSubmit={handleSubmit} className="card p-4 shadow-sm"> {/* Bootstrap classes for styling */}
+        <div className="mb-3">
+          <label htmlFor="payee" className="form-label">Payee</label>
+          <input
+            type="text"
+            className="form-control"
+            id="payee"
+            name="payee"
+            placeholder="e.g., Landlord, Electricity Company"
+            value={formData.payee}
+            onChange={handleChange}
+            required // Yeh field bharna zaroori hai
+          />
+        </div>
+        <div className="mb-3">
+          <label htmlFor="amount" className="form-label">Amount</label>
+          <input
+            type="number" // Numeric input ke liye
+            step="0.01" // Decimal values allow karein
+            className="form-control"
+            id="amount"
+            name="amount"
+            placeholder="e.g., 1500.00"
+            value={formData.amount}
+            onChange={handleChange}
+            required // Yeh field bharna zaroori hai
+          />
+        </div>
+        <div className="mb-3">
+          <label htmlFor="due_date" className="form-label">Due Date</label>
+          <input
+            type="date" // Calendar picker aur YYYY-MM-DD format ke liye
+            className="form-control"
+            id="due_date"
+            name="due_date"
+            value={formData.due_date}
+            onChange={handleChange}
+            required // Yeh field bharna zaroori hai
+          />
+          <small className="form-text text-muted">Format: YYYY-MM-DD (automatically picked)</small>
+        </div>
+        <div className="mb-3">
+          <label htmlFor="method" className="form-label">Payment Method</label>
+          <input
+            type="text"
+            className="form-control"
+            id="method"
+            name="method"
+            placeholder="e.g., Bank Transfer, Credit Card"
+            value={formData.method}
+            onChange={handleChange}
+            required // Yeh field bharna zaroori hai
+          />
+        </div>
+        <button type="submit" className="btn btn-primary">Schedule Payment</button>
       </form>
     </div>
   );
-};
+}
 
 export default SchedulePayment;
