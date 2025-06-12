@@ -71,7 +71,7 @@ function PaymentList() {
               <td>{payment.created_at}</td>
               <td>
                 <button
-                  className="btn btn-danger btn-sm"
+                  className="button btn-danger btn-sm"
                   onClick={() => handleCancel(payment.id)}
                   disabled={payment.status !== 'Pending'} // Disabled logic updated
                 >
