@@ -9,7 +9,8 @@ import PaymentList  from './pages/PaymentList';
 import RescheduleUpdate from './pages/RescheduleUpdate';
 import BulkUpload from './pages/BulkUpload';
 import Reports from './pages/Reports';
-import Setting from './pages/Settings'
+import Setting from './pages/Settings';
+
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
