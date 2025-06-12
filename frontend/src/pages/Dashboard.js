@@ -46,11 +46,12 @@ function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      {userData.failed_payments_count > 0 && (
+      {/* Failed Payments Alert Section */}
+      {/* {userData.failed_payments_count > 0 && (
         <div className="alert alert-danger">
           <strong>Alert:</strong> You have {userData.failed_payments_count} failed payment(s). Please check your Payment List.
         </div>
-      )}
+      )} */}
 
 
       <div className="header-section">
@@ -75,7 +76,7 @@ function Dashboard() {
 
       <div className="actions">
         <button className="btn-process" onClick={handleProcessPayments}>
-          ⚙️ Simulate Due Payment Processing
+          Simulate Due Payment Processing
         </button>
       </div>
     </div>
