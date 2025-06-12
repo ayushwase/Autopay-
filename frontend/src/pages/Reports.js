@@ -35,10 +35,11 @@ const Reports = () => {
     <div className="reports-container" style={{ padding: '20px' }}>
       <h2>Reports</h2>
       <p>Download your payment history in Excel or PDF format.</p>
-      <button onClick={exportToExcel} style={{ marginRight: '10px' }}>Export to Excel</button>
-      <button onClick={exportToPDF}>Export to PDF</button>
+      <button className='report-btn' onClick={exportToExcel} style={{ marginRight: '10px' }}>🡇 Export to Excel</button>
+      <button className='report-btn' onClick={exportToPDF}>🡇 Export to PDF</button>
     </div>
   );
 };
 
 export default Reports;
+
