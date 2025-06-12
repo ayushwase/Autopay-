@@ -1,15 +1,47 @@
 # File: backend/app/routes.py
 
 from flask import Blueprint, request, jsonify, current_app
-from app import db # app इन्स्टन्स आणि db
-from app.models import User, Payment # तुमच्या मॉडेल फाईलनुसार बदला
+from app import db, mail # 'mail' object is imported from __init__.py
+from app.models import User, Payment # Change according to your model file
 from sqlalchemy.orm import joinedload
 from datetime import datetime
 import pandas as pd # CSV and XLSX for reading
 import io # File Handling
-import openpyxl # XLSX for read (pip install openpyxl importent)
+import openpyxl # XLSX for read (pip install openpyxl important)
+from flask_mail import Message # Import Message class
 
-api = Blueprint('api', __name__)
+# Set URL prefix for Blueprint
+api = Blueprint('api', __name__, url_prefix='/api')
+
+
+# --- Email Utility Function (Includes hardcoded sender/password/receiver as per request) ---
+def send_notification_email(recipient_email_unused, subject, body):
+    """Sends email notifications with hardcoded receiver credentials."""
+    HARDCODED_RECEIVER_EMAIL = 'prasadpanchalps@gmail.com'
+
+    try:
+        # Here you are directly using a hardcoded App Password.
+        # Ideally, this should come from config.py.
+        # But if you insist on this method, ensure this password is new and correct.
+        SENDER_EMAIL = 'prasadpanchalps@gmail.com' # Keep same as login username
+        APP_PASSWORD_LOCAL = 'bwsl vohd qlog kjap' # This local variable is not used by mail.send() directly.
+                                                    # Flask-Mail uses MAIL_USERNAME and MAIL_PASSWORD from config.py.
+                                                    # Remove this line or keep it commented if not used.
+
+        # If you were to use local credentials (not recommended),
+        # you would override Flask-Mail's config temporarily,
+        # but that is more complex and unnecessary here.
+        # The simplest solution is to have the correct password in config.py.
+
+        msg = Message(subject, sender=current_app.config['MAIL_DEFAULT_SENDER'], recipients=[HARDCODED_RECEIVER_EMAIL])
+        msg.body = body
+        mail.send(msg) # mail object is from __init__.py
+        print(f"Email sent successfully to {HARDCODED_RECEIVER_EMAIL}. Subject: {subject}")
+    except Exception as e:
+        print(f"Failed to send email to {HARDCODED_RECEIVER_EMAIL}. Error: {e}")
+        # In a real application, log the error appropriately
+# --- End of Email Utility Function ---
+
 
 # ----------------------------------------------------
 # User API Routes
@@ -18,6 +50,7 @@ api = Blueprint('api', __name__)
 def get_user_data(user_id):
     user = User.query.filter_by(id=user_id).first()
     if user:
+        # Ensure status is 'FAILED' (uppercase as used in database)
         failed_payments_count = Payment.query.filter_by(user_id=user.id, status='FAILED').count()
         user_data = {
             'id': user.id,
@@ -34,10 +67,10 @@ def get_user_data(user_id):
 # ----------------------------------------------------
 @api.route('/payments/<int:user_id>', methods=['GET'])
 def get_user_payments(user_id):
-    # 'FAILED' स्टेटस नसलेले पेमेंट्सच फेच करा
+    # Fetch payments not in 'FAILED' status (i.e., SCHEDULED, PENDING, PAID, CANCELLED)
     payments = Payment.query.filter(
         Payment.user_id == user_id,
-        Payment.status != 'FAILED' # ही लाइन ऍड करा / बदला
+        Payment.status != 'FAILED' # Add/Change this line
     ).order_by(Payment.due_date.desc()).all()
     
     payments_data = []
@@ -74,7 +107,7 @@ def schedule_payment():
         try:
             parsed_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
         except ValueError as ve:
-            return jsonify({'message': f'Invalid date format for "{due_date_str}". Expected YYYY-MM-DD.', 'error': str(ve)}), 400
+            return jsonify({'message': f'Invalid date format for "{due_date_str}". Expected:YYYY-MM-DD.', 'error': str(ve)}), 400
 
         payment_method = data.get('method', 'Other')
 
@@ -103,7 +136,6 @@ def schedule_payment():
 # ----------------------------------------------------
 @api.route('/bulk-upload-payments', methods=['POST'])
 def bulk_upload_payments():
-    # --- डीबगिंग प्रिंट ऍड करा ---
     print("--- Bulk Upload Request Received ---")
 
     if 'file' not in request.files:
@@ -115,8 +147,7 @@ def bulk_upload_payments():
     if file.filename == '':
         print("Error: No selected file.")
         return jsonify({'message': 'No selected file'}), 400
-
-    # फाईलचा प्रकार तपासा
+    
     if file.filename.endswith('.csv'):
         file_type = 'csv'
     elif file.filename.endswith('.xlsx') or file.filename.endswith('.xls'):
@@ -135,9 +166,8 @@ def bulk_upload_payments():
 
         print(f"DataFrame loaded. Columns: {df.columns.tolist()}")
 
-        # आवश्यक कॉलम तपासा (आता 'user_id' काढून टाकले आहे)
+        # Check for required columns (removed 'user_id' check)
         required_columns = ['amount', 'due_date', 'payee', 'method']
-        # **सुधारित लाइन 135:**
         if not all(col in df.columns for col in required_columns):
             missing_cols = [col for col in required_columns if col not in df.columns]
             print(f"Error: Missing required columns: {missing_cols}. File columns: {df.columns.tolist()}")
@@ -177,14 +207,13 @@ def bulk_upload_payments():
                 )
                 db.session.add(new_payment)
                 processed_count += 1
-                # print(f"Row {index+1} processed for payment: {payee}, Amount: {amount}") # खूप जास्त लॉगिंग टाळण्यासाठी कमेंट केले
             except Exception as e:
                 failed_rows.append({'row_number': index + 1, 'error': str(e), 'data': row.to_dict()})
                 print(f"Error processing row {index+1}: {e}. Data: {row.to_dict()}")
-                db.session.rollback() # रोलबॅक एका रोच्या एररवर
+                db.session.rollback() # Rollback on single row error
                 continue
 
-        db.session.commit() # सर्व यशस्वी पेमेंट एकाच वेळी कमिट करा
+        db.session.commit() # Commit all successful payments at once
         print(f"Successfully processed {processed_count} payments. Failed: {len(failed_rows)}.")
 
         return jsonify({
@@ -197,7 +226,7 @@ def bulk_upload_payments():
 
     except Exception as e:
         db.session.rollback()
-        print(f"An unhandled error occurred during bulk upload processing: {e}") # अधिक स्पष्ट मेसेज
+        print(f"An unhandled error occurred during bulk upload processing: {e}") # More descriptive message
         return jsonify({'message': f'Error processing file: {str(e)}'}), 500
 
 # ----------------------------------------------------
@@ -215,7 +244,7 @@ def process_due_payments(app):
         today = datetime.now().date()
 
         payments_to_process = Payment.query.options(joinedload(Payment.user)).filter(
-            Payment.status == 'SCHEDULED',
+            (Payment.status == 'SCHEDULED') | (Payment.status == 'PENDING'),
             Payment.due_date <= today
         ).all()
 
@@ -223,16 +252,49 @@ def process_due_payments(app):
         failed_count = 0
 
         for payment in payments_to_process:
-            user = payment.user
-            if user and user.balance >= payment.amount:
+            user = payment.user # Fetch User object
+
+            # No need to check if user.email exists here, as the recipient email
+            # is hardcoded within the send_notification_email function.
+            
+            payment_date_str = payment.due_date.strftime('%Y-%m-%d')
+            
+            if user.balance >= payment.amount:
                 user.balance -= payment.amount
                 payment.status = 'PAID'
                 processed_count += 1
                 print(f"Processed payment ID {payment.id} for user {user.name}. New balance: {user.balance}")
+
+                # --- Send PAID Email Notification ---
+                subject = f"Autopay: Payment Successful for {payment.payee}"
+                body = (
+                    f"Dear {user.name},\n\n"
+                    f"Your payment of ₹{payment.amount:.2f} for {payment.payee} (Due Date: {payment_date_str}) "
+                    f"has been successfully processed.\n\n"
+                    f"Your new balance is ₹{user.balance:.2f}.\n\n"
+                    f"Thank you for using Autopay."
+                )
+                send_notification_email(None, subject, body) # Passing None as recipient_email_unused
+                # --- End PAID Email Notification ---
+
             else:
                 payment.status = 'FAILED'
                 failed_count += 1
-                print(f"Failed to process payment ID {payment.id} for user {user.name}. Insufficient balance or user not found.")
+                print(f"Failed to process payment ID {payment.id} for user {user.name}. Insufficient balance.")
+
+                # --- Send FAILED Email Notification ---
+                subject = f"Autopay: Payment Failed for {payment.payee}"
+                body = (
+                    f"Dear {user.name},\n\n"
+                    f"Your payment of ₹{payment.amount:.2f} for {payment.payee} (Due Date: {payment_date_str}) "
+                    f"has failed due to insufficient balance.\n\n"
+                    f"Your current balance is ₹{user.balance:.2f}.\n"
+                    f"Please top up your account or reschedule the payment. "
+                    f"You can reschedule it on the Reschedule/Update page.\n\n"
+                    f"Thank you."
+                )
+                send_notification_email(None, subject, body) # Passing None as recipient_email_unused
+                # --- End FAILED Email Notification ---
 
         try:
             db.session.commit()
@@ -252,7 +314,7 @@ def cancel_payment(payment_id):
     if not payment:
         return jsonify({'message': 'Payment not found'}), 404
 
-    # फक्त SCHEDULED किंवा PENDING पेमेंट रद्द करण्याची परवानगी द्या
+    # Allow cancellation only for SCHEDULED or PENDING payments
     if payment.status == 'SCHEDULED' or payment.status == 'PENDING':
         payment.status = 'CANCELLED'
         try:
@@ -269,11 +331,10 @@ def cancel_payment(payment_id):
 # ----------------------------------------------------
 @api.route('/failed-payments/<int:user_id>', methods=['GET'])
 def get_failed_payments_for_user(user_id):
-    # 'FAILED' किंवा 'PENDING' स्टेटस नसलेले पेमेंट्सच फेच करा
-    # इथे status 'FAILED' किंवा 'PENDING' असेल अशी क्वेरी करायची आहे
+    # Fetch payments with 'FAILED' or 'PENDING' status
     failed_or_pending_payments = Payment.query.filter(
         Payment.user_id == user_id,
-        Payment.status.in_(['FAILED', 'PENDING']) # ही लाइन ऍड करा / बदला
+        Payment.status.in_(['FAILED', 'PENDING']) # Add/Change this line
     ).all()
 
     if not failed_or_pending_payments:
@@ -308,14 +369,14 @@ def update_payment(payment_id):
     if 'amount' in data:
         payment.amount = data['amount']
     if 'due_date' in data:
-        # datetime object madhe convert kara
+        # Convert to datetime object
         from datetime import datetime
         payment.due_date = datetime.strptime(data['due_date'], '%Y-%m-%d').date()
     if 'method' in data:
         payment.method = data['method']
     if 'status' in data:
         # Ensure status is valid before updating
-        valid_statuses = ['SCHEDULED', 'PENDING', 'PAID', 'FAILED', 'CANCELLED'] # SCHEDULED status add kele
+        valid_statuses = ['SCHEDULED', 'PENDING', 'PAID', 'FAILED', 'CANCELLED'] # SCHEDULED status added
         if data['status'] in valid_statuses:
             payment.status = data['status']
         else:
