@@ -17,13 +17,13 @@ api = Blueprint('api', __name__, url_prefix='/api')
 # --- Email Utility Function (Includes hardcoded sender/password/receiver as per request) ---
 def send_notification_email(recipient_email_unused, subject, body):
     """Sends email notifications with hardcoded receiver credentials."""
-    HARDCODED_RECEIVER_EMAIL = 'prasadpanchalps@gmail.com' # Receiver mail
+    HARDCODED_RECEIVER_EMAIL = 'Receiver mail' # Receiver mail
 
     try:
         # Here you are directly using a hardcoded App Password.
         # Ideally, this should come from config.py.
         # But if you insist on this method, ensure this password is new and correct.
-        SENDER_EMAIL = 'prasadpanchalps@gmail.com' # Keep same as login username(Sender Mail)
+        SENDER_EMAIL = 'Sender Mail' # Keep same as login username
         APP_PASSWORD_LOCAL = 'your_app_password' # This local variable is not used by mail.send() directly.
 
 
