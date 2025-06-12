@@ -64,3 +64,21 @@ td {
   text-align: center;
   color: #374151;
 }
+
+.btn{
+  height: 38px;
+  width: 239px;
+  border: none;
+  box-shadow: 1px 1px 6px 0px  rgba(169, 169, 169, 0.3);
+  background-color: #ceeaff;
+  border-radius: 11px;
+  color: #60718e;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn:hover{
+  background-color: #96d2ff;
+  color: white;
+  box-shadow: 1px 1px 12px 0px #61baff;
+  transition: color .5s, background-color .5s, box-shadow .5s;
+}
